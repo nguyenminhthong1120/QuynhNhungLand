@@ -1,0 +1,2196 @@
+
+    <script>
+        function openLightbox(imageSrc) {
+            event.stopPropagation();
+            const lightbox = document.createElement('div');
+            lightbox.className = 'image-lightbox';
+            lightbox.innerHTML = `
+                <span class="lightbox-close" onclick="closeLightbox(event)">&times;</span>
+                <img src="${imageSrc}" class="lightbox-image">
+            `;
+            lightbox.onclick = function(e) {
+                if (e.target === lightbox) {
+                    closeLightbox();
+                }
+            };
+            document.body.appendChild(lightbox);
+        }
+
+        function closeLightbox(event) {
+            if (event) event.stopPropagation();
+            const lightbox = document.querySelector('.image-lightbox');
+            if (lightbox) {
+                lightbox.remove();
+            }
+        }
+    </script>
+
+
+    <style>
+        .image-lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            cursor: pointer;
+        }
+        .lightbox-image {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+        }
+    </style>
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuynhNhungLand - Bất Động Sản Đất Nghệ An</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-firestore.js"></script>
+    <!-- Cloudinary -->
+    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        .admin-controls {
+            transition: all 0.3s ease;
+        }
+        .property-card:hover .admin-controls {
+            display: flex !important;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        .success-message {
+            position: absolute;
+            top: -30px;
+            left: 0;
+            right: 0;
+            background: #d4edda;
+            color: #155724;
+            padding: 5px 10px;
+            text-align: center;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(0,82,61,0.9) 0%, rgba(0,118,89,0.8) 100%);
+        }
+        .property-card {
+            cursor: pointer;
+        }
+        .property-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        @media (min-width: 1024px) {
+            .lg\:grid-cols-4 {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+        .map-container {
+            height: 400px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .nav-link:hover::after {
+            content: '';
+            display: block;
+            width: 100%;
+            height: 2px;
+            background: #00a86b;
+            margin-top: 2px;
+        }
+        .search-box {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        @media (max-width: 767px) {
+            #searchForm select {
+                margin-right: 0;
+                border-bottom: 1px solid #e5e7eb;
+            }
+            
+            #searchForm input {
+                border-radius: 12px 12px 0 0 !important;
+            }
+            
+            #searchForm button {
+                border-radius: 0 0 12px 12px !important;
+            }
+        }
+        
+        /* Enhanced select styling */
+        #searchForm select {
+            appearance: none;
+            -webkit-appearance: none;
+            padding-right: 2.5rem;
+        }
+        
+        /* Focus states */
+        #searchForm input:focus, 
+        #searchForm select:focus {
+            border-color: #059669;
+            box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.2);
+        }
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+        }
+        .testimonial-card {
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+        .floating-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 50;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .floating-button .tooltip {
+            position: absolute;
+            right: 60px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #fff;
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        .floating-button:hover .tooltip {
+            opacity: 1;
+            right: 70px;
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-50 pt-12">
+    <script>
+        // Cloudinary configuration
+        const cloudinaryConfig = {
+            cloudName: 'deov28qtm',
+            apiKey: '452911766478336',
+            uploadPreset: 'post_upload',
+            folder: 'post_upload'
+        };
+
+        // Function to upload file to Cloudinary
+        async function uploadToCloudinary(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', cloudinaryConfig.uploadPreset); // post_upload
+            
+            try {
+                const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudinaryConfig.cloudName}/image/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Upload failed');
+                }
+
+                const data = await response.json();
+                return data.secure_url;
+            } catch (error) {
+                console.error('Error uploading to Cloudinary:', error);
+                throw error;
+            }
+        }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHp5g-jriGZ1ojqB7xJ4LgY8OG-HUOzEA",
+            authDomain: "quynhnhungland.firebaseapp.com",
+            projectId: "quynhnhungland",
+            storageBucket: "quynhnhungland.appspot.com",
+            messagingSenderId: "326332082389",
+            appId: "1:326332082389:web:36d7030d0f4d83c6955a5c",
+            measurementId: "G-W5PQ54E0EN"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    </script>
+    <!-- Top Bar -->
+    <div class="bg-emerald-800 text-white py-2 px-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex space-x-4 text-sm">
+                <div><i class="fas fa-phone-alt mr-1"></i> 0382718916</div>
+                <div><i class="fas fa-envelope mr-1"></i> Quynhnhung2401@gmail.com</div>
+            </div>
+            <div class="flex space-x-4">
+                <a href="https://www.facebook.com/share/1A2LKeTKEN/?mibextid=wwXIfr" class="hover:text-emerald-200"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="hover:text-emerald-200"><i class="fab fa-youtube"></i></a>
+                <a href="#" class="hover:text-emerald-200"><i class="fab fa-zalo"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <div class="flex items-center">
+                    <svg class="h-10 w-10 mr-2" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="40" height="40" rx="8" fill="#065F46"/>
+                        <path d="M20 10C14.4772 10 10 14.4772 10 20C10 25.5228 14.4772 30 20 30C25.5228 30 30 25.5228 30 20C30 14.4772 25.5228 10 20 10Z" fill="#10B981"/>
+                        <path d="M20 15C17.2386 15 15 17.2386 15 20C15 22.7614 17.2386 25 20 25C22.7614 25 25 22.7614 25 20C25 17.2386 22.7614 15 20 15Z" fill="#ECFDF5"/>
+                        <path d="M20 23C21.6569 23 23 21.6569 23 20C23 18.3431 21.6569 17 20 17C18.3431 17 17 18.3431 17 20C17 21.6569 18.3431 23 20 23Z" fill="#065F46"/>
+                        <path d="M20 12V28" stroke="#ECFDF5" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M28 20H12" stroke="#ECFDF5" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <div class="text-2xl font-bold text-emerald-700">
+                        <span class="text-emerald-900">Quynh</span>Nhung<span class="text-emerald-900">Land</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hidden md:flex space-x-8 items-center">
+                <a href="#trang-chu" class="nav-link text-gray-800 font-medium hover:text-emerald-700">Trang chủ</a>
+                <a href="#ban-dat" class="nav-link text-gray-800 font-medium hover:text-emerald-700">Bán đất</a>
+                <a href="#tin-tuc" class="nav-link text-gray-800 font-medium hover:text-emerald-700">Tin tức</a>
+                <a href="#lien-he" class="nav-link text-gray-800 font-medium hover:text-emerald-700">Liên hệ</a>
+                <button onclick="showLoginModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition duration-300">Đăng nhập</button>
+            </div>
+            
+            <div class="md:hidden">
+                <button class="text-gray-800 p-2" id="mobileMenuButton">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+                <div id="mobileMenu" class="hidden absolute top-full left-0 right-0 bg-white shadow-lg py-2 px-4">
+                    <a href="#trang-chu" class="block py-2 border-b border-gray-100">Trang chủ</a>
+                    <a href="#ban-dat" class="block py-2 border-b border-gray-100">Bán đất</a>
+                    <a href="#tin-tuc" class="block py-2 border-b border-gray-100">Tin tức</a>
+                    <a href="#lien-he" class="block py-2">Liên hệ</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Modern Hero Banner with Integrated Search -->
+    <section id="trang-chu" class="relative h-96 md:h-[70vh] max-h-[800px] flex items-center justify-center">
+        <!-- Background Image -->
+        <div class="absolute inset-0 bg-gray-900">
+            <img src="https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
+                  alt="Modern Houses" 
+                  class="w-full h-full object-cover opacity-80">
+        </div>
+        
+        <!-- Search Box Overlay -->
+        <div class="relative z-10 w-full px-4">
+            <div class="container mx-auto">
+                <div class="max-w-3xl mx-auto">
+                    <!-- Combined Search Bar with Filters -->
+                    <div class="relative">
+                        <h2 class="text-3xl md:text-4xl font-bold text-white mb-6 text-center drop-shadow-lg" style="text-shadow: 0 2px 4px rgba(0,0,0,0.3); font-family: 'Montserrat', sans-serif;">Tìm kiếm mãnh đất bạn yêu thích</h2>
+                        <form id="searchForm" class="flex flex-col md:flex-row bg-white p-2 rounded-2xl shadow-xl">
+                            <div class="flex flex-1 flex-col md:flex-row">
+                                <input type="text" id="searchKeyword" 
+                                      placeholder="Nhập từ khóa tìm kiếm..."
+                                     class="flex-grow p-3 pl-5 rounded-t-xl md:rounded-l-xl md:rounded-r-none text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                                              
+                                <div class="flex flex-wrap gap-2 p-2 md:p-0">
+                                    <div class="relative flex-1 min-w-[150px]">
+                                        <select id="searchArea" class="w-full p-3 text-gray-600 rounded-lg md:rounded-none focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white border border-gray-200">
+                                            <option value="">Tất cả khu vực</option>
+                                            <option value="TP. Vinh">TP. Vinh</option>
+                                            <option value="Cửa Lò">Cửa Lò</option>
+                                            <option value="Nam Đàn">Nam Đàn</option>
+                                            <option value="Nghi Lộc">Nghi Lộc</option>
+                                        </select>
+                                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                            <i class="fas fa-map-marker-alt text-gray-400"></i>
+                                        </div>
+                                    </div>
+                                                                    
+                                    <div class="relative flex-1 min-w-[150px]">
+                                        <select id="searchType" class="w-full p-3 text-gray-600 rounded-lg md:rounded-none focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white border border-gray-200">
+                                            <option value="">Tất cả loại</option>
+                                            <option value="Đất thổ cư">Đất thổ cư</option>
+                                            <option value="Nhà phố">Nhà phố</option>
+                                            <option value="Đất nông nghiệp">Đất nông nghiệp</option>
+                                            <option value="Đất dự án">Đất dự án</option>
+                                        </select>
+                                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                            <i class="fas fa-home text-gray-400"></i>
+                                        </div>
+                                    </div>
+                                                                    
+                                    <div class="relative flex-1 min-w-[150px]">
+                                        <select id="searchPrice" class="w-full p-3 text-gray-600 rounded-lg md:rounded-none focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white border border-gray-200">
+                                            <option value="">Tất cả mức giá</option>
+                                            <option value="0-1">Dưới 1 t tỷ</option>
+                                            <option value="1-3">1-3 tỷ</option>
+                                            <option value="3-5">3-5 t tỷ</option>
+                                            <option value="5-10">5-10 tỷ</option>
+                                            <option value="10+">Trên 10 t tỷ</option>
+                                        </select>
+                                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                            <i class="fas fa-tag text-gray-400"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                                                        
+                            <button type="submit" class="bg-emerald-600 text-white p-3 rounded-b-xl md:rounded-r-xl md:rounded-l-none w-full md:w-auto flex items-center justify-center hover:bg-emerald-700 transition">
+                                <i class="fas fa-search mr-2 md:mr-0"></i>
+                                <span class="md:hidden">Tìm kiếm</span>
+                            </button>
+                        </form>
+                    </div>
+                                                
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Properties -->
+    <section id="ban-dat" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800">Bất động sản nổi bật</h2>
+                <a href="javascript:void(0)" onclick="showAllProperties()" class="text-emerald-600 font-medium hover:underline">Xem tất cả <i class="fas fa-arrow-right ml-1"></i></a>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <!-- Property 1 -->
+                <div class="property-card bg-white rounded-xl overflow-hidden shadow-md transition duration-300 cursor-pointer hover:shadow-lg"
+                     onclick="handlePropertyClick(event, 
+                        'Đất thổ cư 120m² - TP. Vinh',
+                        'Phường Hưng Dũng, TP. Vinh, Nghệ An',
+                        '120m²',
+                        '2.5 t tỷ',
+                        'Sổ đỏ',
+                        'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+                        'Mảnh đất đẹp ngay trung tâm TP. Vinh, vị trí đắc địa gần các tiện ích: trường học, bệnh viện, chợ. Đường rộng 6m, lô góc 2 mặt tiền. Pháp lý rõ ràng, sổ đỏ chính chủ, sẵn sàng giao dịch.',
+                        ['Hướng Đông Nam', 'Đường rộng 6m', '2 mặt tiền', 'Gần chợ Hưng Dũng', 'Cách trung tâm 1km', 'Đất thổ cư 100%']
+                     )"
+                     data-area="TP. Vinh" 
+                     data-type="Đất thổ cư" 
+                     data-price="2.5">
+                    <div class="relative">
+                        <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" alt="Đất thổ cư Vinh" class="w-full h-60 object-cover">
+                        <div class="absolute top-4 left-4 bg-emerald-600 text-white px-3 py-1 rounded-full text-sm font-medium">Mới nhất</div>
+                        <div class="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md">
+                            <i class="far fa-heart text-gray-600 hover:text-red-500 cursor-pointer"></i>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-bold text-gray-800">Đất thổ cư 120m² - TP. Vinh</h3>
+                            <span class="bg-emerald-100 text-emerald-800 text-xs font-medium px-2 py-1 rounded">Đã xác thực</span>
+                        </div>
+                        <p class="text-gray-600 mb-4"><i class="fas fa-map-marker-alt text-emerald-600 mr-2"></i> Phường Hưng Dũng, TP. Vinh, Nghệ An</p>
+                        <div class="flex justify-between mb-4">
+                            <div>
+                                <p class="text-gray-500 text-sm">Diện tích</p>
+                                <p class="font-medium">120m²</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Giá</p>
+                                <p class="font-medium text-emerald-600">2.5 t tỷ</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Pháp lý</p>
+                                <p class="font-medium">Sổ đỏ</p>
+                            </div>
+                        </div>
+                        <a href="https://zalo.me/0382718916" target="_blank" class="block w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-lg transition duration-300 text-center mb-2">
+                            <i class="fas fa-phone-alt mr-2"></i> Liên hệ ngay
+                        </a>
+                        <button onclick="showPropertyModal(
+                            '${data.title}',
+                            '${data.location}',
+                            '${data.area}m²',
+                            '${salePrice ? `${salePrice.toFixed(1)} t tỷ <span class="text-gray-500 line-through">${data.price.toFixed(1)} t tỷ</span>` : `${data.price.toFixed(1)} t tỷ`}',
+                            'Sổ đỏ',
+                            '${imageUrl}',
+                            '${data.description || 'Không có mô tả chi tiết'}',
+                            [],
+                            '${doc.id}'
+                        )" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition duration-300">
+                            <i class="fas fa-info-circle mr-2"></i> Xem chi tiết
+                        </button>
+                        <div class="flex space-x-2 hidden" id="adminControls">
+                            <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition duration-300 text-center">
+                                <i class="fas fa-edit mr-2"></i> Sửa
+                            </button>
+                            <button class="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition duration-300 text-center">
+                                <i class="fas fa-trash mr-2"></i> Xóa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                                                
+                <!-- Property 2 -->
+                <div class="property-card bg-white rounded-xl overflow-hidden shadow-md transition duration-300 cursor-pointer" 
+                      onclick="showPropertyModal(
+                        'Đất nông nghiệp 2000m² - Nam Đàn',
+                        'Xã Nam Anh, Nam Đàn, Nghệ An',
+                        '2000m²',
+                        '1.8 t tỷ',
+                        'Sổ đỏ',
+                        'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+                        'Mảnh đất nông nghiệp rộng rãi tại Nam Đàn, thích hợp cho trồng trọt hoặc chăn nuôi. Đất bằng phẳng, có hệ thống tưới tiêu thuận lợi, gần đường giao thông chính. Pháp lý rõ ràng, sổ đỏ chính chủ.',
+                        ['Diện tích lớn 2000m²', 'Đất bằng phẳng', 'Gần đường liên xã', 'Hệ thống tưới tiêu', 'Cách TP. Vinh 15km', 'Đất trồng lúa']
+                     )"
+                     data-area="Nam Đàn" 
+                     data-type="Đất nông nghiệp" 
+                     data-price="1.8">
+                    <div class="relative">
+                        <img src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" alt="Đất nông nghiệp Nam Đàn" class="w-full h-60 object-cover">
+                        <div class="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md">
+                            <i class="far fa-heart text-gray-600 hover:text-red-500 cursor-pointer"></i>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-bold text-gray-800">Đất nông nghiệp 2000m² - Nam Đàn</h3>
+                            <span class="bg-emerald-100 text-emerald-800 text-xs font-medium px-2 py-1 rounded">Đã xác thực</span>
+                        </div>
+                        <p class="text-gray-600 mb-4"><i class="fas fa-map-marker-alt text-emerald-600 mr-2"></i> Xã Nam Anh, Nam Đàn, Nghệ An</p>
+                        <div class="flex justify-between mb-4">
+                            <div>
+                                <p class="text-gray-500 text-sm">Diện tích</p>
+                                <p class="font-medium">2000m²</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Giá</p>
+                                <div class="font-medium text-emerald-600">1.8 tỷ</div>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Pháp lý</p>
+                                <p class="font-medium">Sổ đỏ</p>
+                            </div>
+                        </div>
+                        <button class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-lg transition duration-300">
+                            <i class="fas fa-phone-alt mr-2"></i> Liên hệ ngay
+                        </button>
+                    </div>
+                </div>
+                                                
+                <!-- Property 3 -->
+                <div class="property-card bg-white rounded-xl overflow-hidden shadow-md transition duration-300 cursor-pointer" 
+                      onclick="showPropertyModal(
+                        'Đất dự án 150m² - Cửa Lò',
+                        'Phường Nghi Thu, Cửa Lò, Nghệ An',
+                        '150m²',
+                        '3.2 t tỷ',
+                        'Sổ đỏ',
+                        'https://images.unsplash.com/photo-1600585152220-90363fe7e115?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+                        'Đất nằm trong dự án khu đô thị mới tại Cửa Lò, có tiềm năng tăng giá cao. Vị trí đẹp gần biển, hạ tầng đồng bộ, phù hợp đầu tư hoặc xây nhà nghỉ dưưỡng. Giá đã giảm 300 triệu so với giá gốc.',
+                        ['Nằm trong dự án', 'Cách biển 500m', 'Hạ tầng đồng bộ', 'Tiềm năng tăng giá', 'Phù hợp nghỉ dưỡng', 'Giảm giá 300 triệu']
+                     )"
+                     data-area="Cửa Lò" 
+                     data-type="Đất dự án" 
+                     data-price="3.2">
+                    <div class="relative">
+                        <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" alt="Đất dự án Cửa Lò" class="w-full h-60 object-cover">
+                        <div class="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium">Giảm giá</div>
+                        <div class="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md">
+                            <i class="far fa-heart text-gray-600 hover:text-red-500 cursor-pointer"></i>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-bold text-gray-800">Đất dự án 150m² - Cửa Lò</h3>
+                            <span class="bg-emerald-100 text-emerald-800 text-xs font-medium px-2 py-1 rounded">Đã xác thực</span>
+                        </div>
+                        <p class="text-gray-600 mb-4"><i class="fas fa-map-marker-alt text-emerald-600 mr-2"></i> Phường Nghi Thu, Cửa Lò, Nghệ An</p>
+                        <div class="flex justify-between mb-4">
+                            <div>
+                                <p class="text-gray-500 text-sm">Diện tích</p>
+                                <p class="font-medium">150m²</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Giá</p>
+                                <div class="font-medium text-emerald-600">3.2 (<span class="text-gray-500 line-through">3.5</span>) tỷ</div>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Pháp lý</p>
+                                <p class="font-medium">Sổ đỏ</p>
+                            </div>
+                        </div>
+                        <button class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-lg transition duration-300">
+                            <i class="fas fa-phone-alt mr-2"></i> Liên hệ ngay
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Choose Us -->
+    <section id="cho-thue" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Tại sao chọn QuynhNhungLand?</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Chúng tôi cam kết mang đến dịch vụ bất động sản chuyên nghiệp, minh bạch và hiệu quả nhất tại Nghệ An</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center p-6 rounded-xl hover:bg-gray-50 transition duration-300">
+                    <div class="feature-icon bg-emerald-100 text-emerald-600 mx-auto mb-4">
+                        <i class="fas fa-shield-alt text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Bảo đảm pháp lý</h3>
+                    <p class="text-gray-600">100% bất động sản đã được kiểm định pháp lý rõ ràng, minh bạch thông tin</p>
+                </div>
+                                                
+                <div class="text-center p-6 rounded-xl hover:bg-gray-50 transition duration-300">
+                    <div class="feature-icon bg-blue-100 text-blue-600 mx-auto mb-4">
+                        <i class="fas fa-map-marked-alt text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Hiểu biết sâu sắc</h3>
+                    <p class="text-gray-600">Đội ngũ chuyên gia am hiểu thị trường bất động sản Nghệ An và các vùng lân cận</p>
+                </div>
+                                                
+                <div class="text-center p-6 rounded-xl hover:bg-gray-50 transition duration-300">
+                    <div class="feature-icon bg-purple-100 text-purple-600 mx-auto mb-4">
+                        <i class="fas fa-hand-holding-usd text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Tư vấn tài chính</h3>
+                    <p class="text-gray-600">Hỗ trợ tư vấn các giải pháp tài chính tối ưu nhất cho khách hàng</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Project Area -->
+    <section id="du-an" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800">Khu vực hoạt động</h2>
+                <a href="#map-section" class="text-emerald-600 font-medium hover:underline">Xem bản đồ <i class="fas fa-arrow-right ml-1"></i></a>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div class="bg-white p-4 rounded-lg shadow-sm text-center hover:shadow-md transition duration-300">
+                    <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-city"></i>
+                    </div>
+                    <p class="font-medium">TP. Vinh</p>
+                </div>
+                                                
+                <div class="bg-white p-4 rounded-lg shadow-sm text-center hover:shadow-md transition duration-300">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-umbrella-beach"></i>
+                    </div>
+                    <p class="font-medium">Cửa Lò</p>
+                </div>
+                                                
+                <div class="bg-white p-4 rounded-lg shadow-sm text-center hover:shadow-md transition duration-300">
+                    <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-tractor"></i>
+                    </div>
+                    <p class="font-medium">Nghi Lộc</p>
+                </div>
+                                                
+                <div class="bg-white p-4 rounded-lg shadow-sm text-center hover:shadow-md transition duration-300">
+                    <div class="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-mountain"></i>
+                    </div>
+                    <p class="font-medium">Nam Đàn</p>
+                </div>
+                                                
+                <div class="bg-white p-4 rounded-lg shadow-sm text-center hover:shadow-md transition duration-300">
+                    <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-road"></i>
+                    </div>
+                    <p class="font-medium">Hưng Nguyên</p>
+                </div>
+                                                
+                <div class="bg-white p-4 rounded-lg shadow-sm text-center hover:shadow-md transition duration-300">
+                    <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-tree"></i>
+                    </div>
+                    <p class="font-medium">Thanh Chương</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Khách hàng nói gì về chúng tôi</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Những phản hồi chân thực từ khách hàng đã tin tưởng và sử dụng dịch vụ của QuynhNhungLand</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="testimonial-card p-6 rounded-xl">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full overflow-hidden mr-4">
+                            <img src="https://randomuser.me/api/portraits/women/32.jpg" alt="Khách hàng" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800">Chị Nguyễn Thị Hà</h4>
+                            <p class="text-gray-500 text-sm">Đã mua đất tại Vinh</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4">"Tôi rất hài lòng với dịch vụ của QuynhNhungLand. Nhân viên tư vấn nhiệt tình, pháp lý rõ ràng, quá trình giao dịch minh bạch."</p>
+                    <div class="flex text-yellow-400">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+                                                
+                <div class="testimonial-card p-6 rounded-xl">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full overflow-hidden mr-4">
+                            <img src="https://randomuser.me/api/portraits/men/75.jpg" alt="Khách hàng" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800">Anh Trần Văn Nam</h4>
+                            <p class="text-gray-500 text-sm">Đã đầu tư đất tại Cửa Lò</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4">"QuynhNhungLand đã giúp tôi tìm được mảnh đất ưng  ý với giá cả hợp lý. Sau 1 năm giá đất đã tăng 30%, thật sự là quyết định đúng đắn."</p>
+                    <div class="flex text-yellow-400">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                </div>
+                                                
+                <div class="testimonial-card p-6 rounded-xl">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full overflow-hidden mr-4">
+                            <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Khách hàng" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800">Chị Lê Thị Mai</h4>
+                            <p class="text-gray-500 text-sm">Đã bán đất tại Nam Đàn</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4">"Nhờ QuynhNhungLand mà tôi đã bán được mảnh đất của gia đình với giá tốt hơn nhiều so với tự bán. Dịch vụ chuyên nghiệp từ A-Z."</p>
+                    <div class="flex text-yellow-400">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- News Section -->
+    <section id="tin-tuc" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800">Tin tức bất động sản</h2>
+                <a href="#" class="text-emerald-600 font-medium hover:underline">Xem tất cả <i class="fas fa-arrow-right ml-1"></i></a>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition duration-300">
+                    <img src="https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" alt="Tin tức" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex items-center text-sm text-gray-500 mb-2">
+                            <span><i class="far fa-calendar-alt mr-1"></i> 15/06/2023</span>
+                            <span class="mx-2">|</span>
+                            <span><i class="far fa-user mr-1"></i> Admin</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">Xu hướng đầu tư đất nền tại Nghệ An năm 2023</h3>
+                        <p class="text-gray-600 mb-4">Phân tích các khu vực tiềm năng và dự báo giá đất tại các vùng lân cận TP. Vinh trong năm 2023...</p>
+                        <a href="#" class="text-emerald-600 font-medium hover:underline">Đọc tiếp</a>
+                    </div>
+                </div>
+                                                
+                <div class="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition duration-300">
+                    <img src="https://images.unsplash.com/photo-1600585152220-90363fe7e115?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" alt="Tin tức" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex items-center text-sm text-gray-500 mb-2">
+                            <span><i class="far fa-calendar-alt mr-1"></i> 05/06/2023</span>
+                            <span class="mx-2">|</span>
+                            <span><i class="far fa-user mr-1"></i> Admin</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">Hướng dẫn thủ tục chuyển đổi đất nông nghiệp sang thổ cư</h3>
+                        <p class="text-gray-600 mb-4">Quy trình, thủ tục và chi phí khi chuyển đổi mục đích sử dụng đất từ nông nghiệp sang đất ở tại Nghệ An...</p>
+                        <a href="#" class="text-emerald-600 font-medium hover:underline">Đọc tiếp</a>
+                    </div>
+                </div>
+                                                
+                <div class="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition duration-300">
+                    <img src="https://images.unsplash.com/photo-1582268611958-6919893166bd?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" alt="Tin tức" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex items-center text-sm text-gray-500 mb-2">
+                            <span><i class="far fa-calendar-alt mr-1"></i> 28/05/2023</span>
+                            <span class="mx-2">|</span>
+                            <span><i class="far fa-user mr-1"></i> Admin</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">Các dự án hạ tầng lớn sẽ thay đổi bộ mặt bất động sản Nghệ An</h3>
+                        <p class="text-gray-600 mb-4">Tổng hợp các dự án giao thông, hạ tầng trọng điểm đang và sẽ triển khai tại Nghệ An trong giai đoạn 2023-2025...</p>
+                        <a href="#" class="text-emerald-600 font-medium hover:underline">Đọc tiếp</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="lien-he" class="py-12 md:py-16 bg-emerald-800 text-white">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+                <div>
+                    <h2 class="text-3xl font-bold mb-6">Liên hệ với chúng tôi</h2>
+                    <p class="mb-8">Để được tư vấn về bất động sản tại Nghệ An hoặc báo giá chi tiết, vui lòng liên hệ qua thông tin bên dưới or điền vào form liên hệ.</p>
+                                                
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <div class="bg-emerald-700 p-3 rounded-full mr-4">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold mb-1">Địa chỉ văn phòng</h4>
+                                <p>123 Đường Quang Trung, TP. Vinh, Nghệ An</p>
+                            </div>
+                        </div>
+                                                                    
+                        <div class="flex items-start">
+                            <div class="bg-emerald-700 p-3 rounded-full mr-4">
+                                <i class="fas fa-phone-alt"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold mb-1">Điện thoại</h4>
+                                <p>0382718916</p>
+                            </div>
+                        </div>
+                                                                    
+                        <div class="flex items-start">
+                            <div class="bg-emerald-700 p-3 rounded-full mr-4">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold mb-1">Email</h4>
+                                <p>Quynhnhung2401@gmail.com</p>
+                            </div>
+                        </div>
+                                                                    
+                        <div class="flex items-start">
+                            <div class="bg-emerald-700 p-3 rounded-full mr-4">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold mb-1">Giờ làm việc</h4>
+                                <p>Thứ 2 - Thứ 7: 8h00 - 18h00</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                                                
+                <div>
+                    <form class="bg-white rounded-xl p-6 text-gray-800">
+                        <h3 class="text-xl font-bold mb-6">Gửi yêu cầu tư vấn</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-gray-700 mb-2">Họ và tên</label>
+                                <input type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 mb-2">Số điện thoại</label>
+                                <input type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2">Email</label>
+                            <input type="email" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2">Nội dung</label>
+                            <textarea rows="4" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+                            Gửi yêu cầu
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <div id="map-section">
+    </div>
+    <div class="map-container">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3780.231476098324!2d105.6800093153939!3d18.67964698733896!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3139ce69d644de0f%3A0x681e6b6c2f7a0a1!2zVHAuIFZpbmgsIE5naOG7hyBBbiwgVmnhu4d0IE5hbQ!5e0!3m2!1svi!2s!4v1624456789012!5m2!1svi!2s" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white pt-12 pb-6">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="text-2xl font-bold text-emerald-400 mb-4">
+                        <span class="text-white">Quynh</span>Nhung<span class="text-white">Land</span>
+                    </div>
+                    <p class="mb-4">Đơn vị hàng đầu về tư vấn và môi giới bất động sản tại Nghệ An và các vùng lân cận.</p>
+                    <div class="flex space-x-4">
+                        <a href="https://www.facebook.com/share/1A2LKeTKEN/?mibextid=wwXIfr" class="hover:text-emerald-400"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="hover:text-emerald-400"><i class="fab fa-youtube"></i></a>
+                        <a href="#" class="hover:text-emerald-400"><i class="fab fa-zalo"></i></a>
+                    </div>
+                </div>
+                                                
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Liên kết nhanh</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="hover:text-emerald-400">Trang chủ</a></li>
+                        <li><a href="#" class="hover:text-emerald-400">Bán đất</a></li>
+                        <li><a href="#" class="hover:text-emerald-400">Tin tức</a></li>
+                        <li><a href="#" class="hover:text-emerald-400">Liên hệ</a></li>
+                    </ul>
+                </div>
+                                                
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Khu vực hoạt động</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="hover:text-emerald-400">TP. Vinh</a></li>
+                        <li><a href="#" class="hover:text-emerald-400">Cửa Lò</a></li>
+                        <li><a href="#" class="hover:text-emerald-400">Nghi Lộc</a></li>
+                        <li><a href="#" class="hover:text-emerald-400">Hưng Nguyên</a></li>
+                        <li><a href="#" class="hover:text-emerald-400">Nam Đàn</a></li>
+                        <li><a href="#" class="hover:text-emerald-400">Thanh Chương</a></li>
+                    </ul>
+                </div>
+                                                
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Đăng ký nhận tin</h3>
+                    <p class="mb-4">Nhận thông tin mới nhất về bất động sản Nghệ An qua email của bạn.</p>
+                    <form class="flex">
+                        <input type="email" placeholder="Email của bạn" class="p-2 rounded-l-lg text-gray-800 w-full">
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 px-4 rounded-r-lg">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="pt-6 border-t border-gray-800 text-center text-gray-400 text-sm">
+                <p>© 2023 QuynhNhungLand. Bảo lưu mọi quyền.</p>
+            </div>
+        </div>
+    </footer>
+
+
+    <!-- Property Detail Modal -->
+    <div id="propertyModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="relative">
+                <button onclick="closeModal()" class="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md z-10">
+                    <i class="fas fa-times text-gray-600"></i>
+                </button>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="p-6">
+                        <div class="relative h-64 lg:h-full rounded-lg overflow-hidden">
+                            <img id="modalImage" src="" alt="" class="w-full h-full object-cover cursor-pointer" onclick="openLightbox(this.src)">
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 mt-4 pb-4" id="galleryThumbs">
+                            <!-- Thumbnails will be added here including video -->
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h2 id="modalTitle" class="text-2xl font-bold text-gray-800 mb-2"></h2>
+                        <p id="modalLocation" class="text-gray-600 mb-4"><i class="fas fa-map-marker-alt text-emerald-600 mr-2"></i></p>
+                        <div class="flex justify-between mb-6">
+                            <div>
+                                <p class="text-gray-500 text-sm">Diện tích</p>
+                                <p id="modalArea" class="font-medium"></p>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Giá</p>
+                                <p id="modalPrice" class="font-medium text-emerald-600"></p>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Pháp lý</p>
+                                <p id="modalLegal" class="font-medium"></p>
+                            </div>
+                        </div>
+                        <div class="mb-6">
+                            <h3 class="font-bold text-gray-800 mb-2">Mô tả chi tiết</h3>
+                            <p id="modalDescription" class="text-gray-600"></p>
+                            <div id="videoContainer" class="mt-4"></div>
+                        </div>
+                        <div class="mb-6">
+                            <h3 class="font-bold text-gray-800 mb-2">Đặc điểm</h3>
+                            <ul id="modalFeatures" class="grid grid-cols-2 gap-2 text-gray-600">
+                                <!-- Features will be added here -->
+                            </ul>
+                        </div>
+                        <div class="mb-6">
+                            <h3 class="font-bold text-gray-800 mb-2">Thông tin liên hệ</h3>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-user text-emerald-600 w-6"></i>
+                                    <span class="ml-2">Chị Quỳnh Nhung</span>
+                                </div>
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-phone-alt text-emerald-600 w-6"></i>
+                                    <a href="tel:0382718916" class="ml-2 hover:text-emerald-600">0382718916</a>
+                                </div>
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-envelope text-emerald-600 w-6"></i>
+                                    <a href="mailto:Quynhnhung2401@gmail.com" class="ml-2 hover:text-emerald-600">Quynhnhung2401@gmail.com</a>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-map-marker-alt text-emerald-600 w-6"></i>
+                                    <span class="ml-2">123 Đường Quang Trung, TP. Vinh, Nghệ An</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <a href="https://zalo.me/0382718916" target="_blank" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-lg transition duration-300 text-center">
+                                <i class="fas fa-phone-alt mr-2"></i> Liên hệ ngay
+                            </a>
+                            <button id="editPropertyBtn" onclick="editCurrentProperty()" class="bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg transition duration-300 hidden">
+                                <i class="fas fa-edit mr-2"></i> Sửa
+                            </button>
+                            <button id="deletePropertyBtn" onclick="deleteCurrentProperty()" class="bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-lg transition duration-300 hidden">
+                                <i class="fas fa-trash mr-2"></i> Xóa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="fixed bottom-4 left-4 bg-white p-4 rounded-xl shadow-lg hidden">
+        <h3 class="font-bold text-lg mb-2 text-emerald-700">Quản lý bài đăng</h3>
+        <div id="adminPosts" class="max-h-64 overflow-y-auto mb-4"></div>
+        <button onclick="loadAdminPosts()" class="bg-emerald-600 text-white px-3 py-1 rounded text-sm">
+            <i class="fas fa-sync-alt mr-1"></i> Tải lại
+        </button>
+    </div>
+
+    <!-- Floating Buttons -->
+    <a href="https://zalo.me/0382718916" class="floating-button bg-blue-500 text-white w-14 h-14 rounded-full flex items-center justify-center hover:bg-blue-600 transition duration-300" style="bottom: 100px;">
+        <i class="fab fa-zalo text-2xl"></i>
+        <span class="tooltip">Chat Zalo</span>
+    </a>
+    <a href="https://www.facebook.com/share/1A2LKeTKEN/?mibextid=wwXIfr" class="floating-button bg-emerald-600 text-white w-14 h-14 rounded-full flex items-center justify-center hover:bg-emerald-700 transition duration-300">
+        <i class="fab fa-facebook-messenger text-2xl"></i>
+    </a>
+
+    <!-- Property Post Modal -->
+    <div id="postModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl max-w-2xl w-full p-6 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closePostModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Đăng bài bất động sản</h2>
+            <form id="propertyForm">
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Tiêu đề</label>
+                    <input type="text" id="propertyTitle" placeholder="Nhập tiêu đề" required 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Mô tả</label>
+                    <textarea id="propertyDescription" rows="4" placeholder="Nhập mô tả chi tiết" required 
+                              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"></textarea>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-700 mb-2">Giá (tỷ)</label>
+                        <input type="number" id="propertyPrice" placeholder="Nhập giá" step="0.1" required 
+                               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2">Giảm giá (%)</label>
+                        <input type="number" id="propertyDiscount" placeholder="Nhập % giảm giá" min="0" max="100" 
+                               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-700 mb-2">Vị trí</label>
+                        <input type="text" id="propertyLocation" placeholder="Nhập vị trí" required 
+                               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2">Diện tích (m²)</label>
+                        <input type="number" id="propertyArea" placeholder="Nhập diện tích" required 
+                               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Pháp lý</label>
+                    <select id="propertyLegal" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        <option value="Sổ đỏ">Sổ đỏ</option>
+                        <option value="Sổ hồng">Sổ hồng</option>
+                        <option value="Đang chờ sổ">Đang chờ sổ</option>
+                        <option value="Giấy tờ hợp lệ">Giấy tờ hợp lệ</option>
+                        <option value="Hợp đồng góp vốn">Hợp đồng góp vốn</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Ảnh bìa</label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                        <input type="file" id="propertyImage" accept="image/*" class="hidden">
+                        <div id="imagePreview" class="mb-2 hidden relative">
+                            <img id="previewImage" src="#" alt="Preview" class="max-h-40 mx-auto">
+                            <button type="button" onclick="removeCoverImage()" class="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <button type="button" onclick="document.getElementById('propertyImage').click()" 
+                                class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition duration-300">
+                            <i class="fas fa-upload mr-2"></i> Tải ảnh lên
+                        </button>
+                        <p class="text-sm text-gray-500 mt-2">Chọn ảnh bìa cho bài đăng</p>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Ảnh chi tiết</label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                        <input type="file" id="detailImages" accept="image/*" multiple class="hidden">
+                        <div id="detailImagesPreview" class="grid grid-cols-3 gap-2 mb-2 hidden"></div>
+                        <div id="removedImages" class="hidden"></div>
+                        <button type="button" onclick="document.getElementById('detailImages').click()" 
+                                class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition duration-300">
+                            <i class="fas fa-images mr-2"></i> Tải nhiều ảnh
+                        </button>
+                        <p class="text-sm text-gray-500 mt-2">Chọn tối đa 10 ảnh (không bắt buộc)</p>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Đặc điểm</label>
+                    <div class="flex mb-2">
+                        <input type="text" id="featureInput" placeholder="Nhập đặc điểm" 
+                               class="flex-1 p-3 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        <button type="button" onclick="addFeature()" class="bg-emerald-600 text-white px-4 rounded-r-lg">
+                            Thêm
+                        </button>
+                    </div>
+                    <div id="featuresContainer" class="space-y-2"></div>
+                    <p class="text-sm text-gray-500 mt-2">Thêm các đặc điểm nổi bật của bất động sản</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Video (URL YouTube)</label>
+                    <input type="url" id="videoUrl" placeholder="https://www.youtube.com/watch?v=..." 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    <p class="text-sm text-gray-500 mt-2">Dán link YouTube tại đây (không bắt buộc)</p>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" onclick="closePostModal()" 
+                            class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition duration-300">
+                        Hủy bỏ
+                    </button>
+                    <button type="submit" 
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-lg transition duration-300">
+                        Đăng bài
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 relative">
+            <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl">×</i>
+            </button>
+            <div id="loginMessage" class="mb-4 text-center hidden"></div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Đăng nhập</h2>
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Tài khoản</label>
+                    <input type="text" id="username" placeholder="Nhập tài khoản" required 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 mb-2">Mật khẩu</label>
+                    <input type="password" id="password" placeholder="Nhập mật khẩu" required 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+                    Đăng nhập
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Popup Form -->
+    <div id="consultationPopup" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 relative">
+            <button onclick="closePopup()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl">×</i>
+            </button>
+            <div class="success-message" id="successMsg">Gửi thành công!</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Nhập thông tin tư vấn</h2>
+            <form id="myForm">
+                <input type="text" name="name" placeholder="Họ và tên" required class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                <input type="text" name="phone" placeholder="Số điện thoại" required class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+                    Gửi
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Property Post Functions
+        function showPostModal() {
+            document.getElementById('postModal').classList.remove('hidden');
+        }
+
+        function closePostModal() {
+            document.getElementById('postModal').classList.add('hidden');
+            document.getElementById('propertyForm').reset();
+            document.getElementById('imagePreview').classList.add('hidden');
+            document.getElementById('detailImagesPreview').classList.add('hidden');
+            document.getElementById('detailImagesPreview').innerHTML = '';
+            document.getElementById('featuresContainer').innerHTML = '';
+            
+            // Reset trạng thái
+            editingPostId = null;
+            const submitBtn = document.querySelector('#propertyForm button[type="submit"]');
+            submitBtn.innerHTML = 'Đăng bài';
+            submitBtn.disabled = false;
+        }
+
+        // Handle main image preview
+        document.getElementById('propertyImage').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('previewImage').src = event.target.result;
+                    document.getElementById('imagePreview').classList.remove('hidden');
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Handle detail images preview
+        document.getElementById('detailImages').addEventListener('change', function(e) {
+            const files = e.target.files;
+            const previewContainer = document.getElementById('detailImagesPreview');
+            
+            if (files.length > 0) {
+                previewContainer.classList.remove('hidden');
+                
+                for (let i = 0; i < Math.min(files.length, 10); i++) {
+                    const reader = new FileReader();
+                    const div = document.createElement('div');
+                    div.className = 'relative';
+                    
+                    const img = document.createElement('img');
+                    img.className = 'h-24 w-full object-cover rounded';
+                    img.dataset.index = i;
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs';
+                    removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    removeBtn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        removeDetailImage(i);
+                    };
+                    
+                    reader.onload = function(e) {
+                        img.src = e.target.result;
+                        div.appendChild(img);
+                        div.appendChild(removeBtn);
+                        previewContainer.appendChild(div);
+                    };
+                    
+                    reader.readAsDataURL(files[i]);
+                }
+            } else if (previewContainer.children.length === 0) {
+                previewContainer.classList.add('hidden');
+            }
+        });
+
+        function removeCoverImage() {
+            document.getElementById('propertyImage').value = '';
+            document.getElementById('imagePreview').classList.add('hidden');
+        }
+
+        // Feature management functions
+        function addFeature() {
+            const featureInput = document.getElementById('featureInput');
+            const featureText = featureInput.value.trim();
+            
+            if (featureText) {
+                const featureItem = document.createElement('div');
+                featureItem.className = 'feature-item bg-gray-100 rounded-lg px-3 py-2 flex justify-between items-center';
+                featureItem.innerHTML = `
+                    <span>${featureText}</span>
+                    <button onclick="removeFeature(this)" class="text-red-500 hover:text-red-700">
+                        ×
+                    </button>
+                `;
+                document.getElementById('featuresContainer').appendChild(featureItem);
+                featureInput.value = '';
+            }
+        }
+
+        function removeFeature(button) {
+            button.parentElement.remove();
+        }
+
+        function removeDetailImage(index) {
+            const input = document.getElementById('detailImages');
+            const files = Array.from(input.files);
+            files.splice(index, 1);
+            
+            // Update file input
+            const dataTransfer = new DataTransfer();
+            files.forEach(file => dataTransfer.items.add(file));
+            input.files = dataTransfer.files;
+            
+            // Re-render preview
+            const previewContainer = document.getElementById('detailImagesPreview');
+            previewContainer.innerHTML = '';
+            
+            if (files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                    const reader = new FileReader();
+                    const div = document.createElement('div');
+                    div.className = 'relative';
+                    
+                    const img = document.createElement('img');
+                    img.className = 'h-24 w-full object-cover rounded';
+                    img.dataset.index = i;
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs';
+                    removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    removeBtn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        removeDetailImage(i);
+                    };
+                    
+                    reader.onload = function(e) {
+                        img.src = e.target.result;
+                        div.appendChild(img);
+                        div.appendChild(removeBtn);
+                        previewContainer.appendChild(div);
+                    };
+                    
+                    reader.readAsDataURL(files[i]);
+                }
+            } else {
+                previewContainer.classList.add('hidden');
+            }
+        }
+
+        // Handle property form submission (create/update)
+        document.getElementById('propertyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('propertyTitle').value;
+            const description = document.getElementById('propertyDescription').value;
+            const price = parseFloat(document.getElementById('propertyPrice').value);
+            const discount = parseInt(document.getElementById('propertyDiscount').value) || 0;
+            const location = document.getElementById('propertyLocation').value;
+            const area = document.getElementById('propertyArea').value;
+            const imageFile = document.getElementById('propertyImage').files[0];
+            const detailImages = document.getElementById('detailImages').files;
+            const videoUrl = document.getElementById('videoUrl').value;
+            const isEdit = this.dataset.editId;
+            
+            // Get features
+            const features = [];
+            document.querySelectorAll('#featuresContainer .feature-item').forEach(item => {
+                features.push(item.textContent.replace('×', '').trim());
+            });
+            
+            try {
+                // Show loading state
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalBtnText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang tải lên...';
+                submitBtn.disabled = true;
+                
+                // Upload cover image
+                let coverImageUrl = '';
+                if (imageFile) {
+                    try {
+                        console.log("🟡 Đang upload ảnh bìa lên Cloudinary...");
+                        coverImageUrl = await uploadToCloudinary(imageFile);
+                        console.log("🟢 Upload ảnh bìa thành công:", coverImageUrl);
+                    } catch (error) {
+                        console.error("🔴 Upload ảnh bìa thất bại:", error);
+                        alert("Tải ảnh bìa lên thất bại. Vui lòng thử lại.");
+                        submitBtn.innerHTML = originalBtnText;
+                        submitBtn.disabled = false;
+                        return;
+                    }
+                }
+                
+                // Xử lý ảnh chi tiết: nếu có ảnh mới thì upload, không thì giữ ảnh cũ
+                let detailImageUrls = originalImages; // Mặc định giữ ảnh cũ
+                if (detailImages && detailImages.length > 0) {
+                    try {
+                        console.log("🟡 Đang upload ảnh chi tiết lên Cloudinary...");
+                        detailImageUrls = []; // Reset mảng nếu có ảnh mới
+                        for (let i = 0; i < Math.min(detailImages.length, 10); i++) {
+                            const url = await uploadToCloudinary(detailImages[i]);
+                            console.log(`🟢 Upload ảnh chi tiết ${i+1}/${Math.min(detailImages.length, 10)} thành công`);
+                            detailImageUrls.push(url);
+                        }
+                        console.log("🟢 Tất cả ảnh chi tiết upload thành công");
+                    } catch (error) {
+                        console.error("🔴 Upload ảnh chi tiết thất bại:", error);
+                        alert("Tải ảnh chi tiết lên thất bại. Vui lòng thử lại.");
+                        submitBtn.innerHTML = originalBtnText;
+                        submitBtn.disabled = false;
+                        return;
+                    }
+                }
+                
+                const legal = document.getElementById('propertyLegal').value;
+                const propertyData = {
+                    title: title,
+                    description: description,
+                    price: price,
+                    discount: discount,
+                    location: location,
+                    area: area,
+                    legal: legal,
+                    features: features,
+                    updatedAt: new Date()
+                };
+
+                // Thêm videoUrl nếu có
+                if (videoUrl) {
+                    propertyData.videoUrl = videoUrl;
+                }
+
+                // Chỉ cập nhật ảnh bìa nếu có ảnh mới
+                if (coverImageUrl) {
+                    propertyData.coverImage = coverImageUrl;
+                }
+
+                // Luôn cập nhật ảnh chi tiết (có thể là ảnh cũ hoặc mới)
+                propertyData.detailImages = detailImageUrls;
+            
+            if (!isEdit) {
+                propertyData.createdAt = new Date();
+            }
+            
+                let promise;
+                if (editingPostId) {
+                    // Update existing post
+                    promise = db.collection("properties").doc(editingPostId).update(propertyData);
+                } else {
+                    // Create new post
+                    propertyData.createdAt = new Date();
+                    promise = db.collection("properties").add(propertyData);
+                }
+                
+                promise.then(docRef => {
+                    console.log("🟢 " + (editingPostId ? "Cập nhật" : "Đăng") + " bài thành công");
+                    alert((editingPostId ? "Cập nhật" : "Đăng") + " bài thành công!");
+                    
+                    // Reset form and state
+                    document.getElementById('propertyForm').reset();
+                    document.getElementById('imagePreview').classList.add('hidden');
+                    document.getElementById('detailImagesPreview').classList.add('hidden');
+                    document.getElementById('detailImagesPreview').innerHTML = '';
+                    document.getElementById('featuresContainer').innerHTML = '';
+                    editingPostId = null;
+                    
+                    // Reset trạng thái
+                    editingPostId = null;
+                    const submitBtn = document.querySelector('#propertyForm button[type="submit"]');
+                    submitBtn.innerHTML = 'Đăng bài';
+                    submitBtn.disabled = false;
+                    
+                    closePostModal();
+                    loadPropertiesFromFirebase();
+                    
+                    // Tạo card mới để hiển thị ngay lập tức
+                    const salePrice = discount > 0 ? price * (100 - discount) / 100 : null;
+                    const propertyGrid = document.querySelector('#ban-dat .grid');
+                    const newProperty = document.createElement('div');
+                    newProperty.className = 'property-card bg-white rounded-xl overflow-hidden shadow-md transition duration-300 cursor-pointer hover:shadow-lg';
+                    
+                    // Use the uploaded image URL
+                    const imageUrl = coverImageUrl || 
+                        `https://picsum.photos/500/300?random=${Math.floor(Math.random() * 1000)}`;
+                
+                newProperty.innerHTML = `
+                <div class="relative">
+                    <img src="${imageUrl}" alt="${title}" class="w-full h-60 object-cover">
+                    ${discount > 0 ? `<div class="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium">Giảm ${discount}%</div>` : ''}
+                    <div class="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md">
+                        <i class="far fa-heart text-gray-600 hover:text-red-500 cursor-pointer"></i>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-xl font-bold text-gray-800">${title}</h3>
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-medium px-2 py-1 rounded">Đã xác thực</span>
+                    </div>
+                    <p class="text-gray-600 mb-4"><i class="fas fa-map-marker-alt text-emerald-600 mr-2"></i> ${location}</p>
+                    <div class="flex justify-between mb-4">
+                        <div>
+                            <p class="text-gray-500 text-sm">Diện tích</p>
+                            <p class="font-medium">${area}m²</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm">Giá</p>
+                            <p class="font-medium text-emerald-600">
+                                ${salePrice ? `${salePrice.toFixed(1)} tỷ <span class="text-gray-500 line-through text-sm">${price.toFixed(1)} tỷ</span>` : `${price.toFixed(1)} tỷ`}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm">Pháp lý</p>
+                            <p class="font-medium">Sổ đỏ</p>
+                        </div>
+                    </div>
+                    <a href="https://zalo.me/0382718916" target="_blank" class="block w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-lg transition duration-300 text-center mb-2">
+                        <i class="fas fa-phone-alt mr-2"></i> Liên hệ ngay
+                    </a>
+                    <div class="flex space-x-2">
+                        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition duration-300 text-center">
+                            <i class="fas fa-edit mr-2"></i> Sửa
+                        </button>
+                        <button class="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition duration-300 text-center">
+                            <i class="fas fa-trash mr-2"></i> Xóa
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+                propertyGrid.prepend(newProperty);
+                
+                // Add click handler for the new property
+                newProperty.addEventListener('click', function() {
+                    showPropertyModal(
+                        title,
+                        location,
+                        `${area}m²`,
+                        salePrice ? `${salePrice.toFixed(1)} tỷ <span class="text-gray-500 line-through">${price.toFixed(1)} tỷ</span>` : `${price.toFixed(1)} tỷ`,
+                        "Sổ đỏ",
+                        imageUrl,
+                        description,
+                        [],
+                        docRef.id // Truyền ID của document mới tạo
+                    );
+                });
+                }).catch(error => {
+                    console.error("🔴 Lỗi khi lưu bài đăng:", error);
+                    alert("Có lỗi xảy ra khi lưu bài đăng: " + error.message);
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                });
+            } catch (error) {
+                console.error("Error uploading files:", error);
+                alert("Có lỗi xảy ra khi tải ảnh lên: " + error.message);
+                const submitBtn = this.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Login Functions
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.remove('hidden');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('loginMessage').classList.add('hidden');
+            document.getElementById('loginForm').reset();
+        }
+
+        function showAddPropertyButton() {
+            const header = document.querySelector('#ban-dat .flex.justify-between');
+            const addBtn = document.createElement('button');
+            addBtn.className = 'bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition duration-300';
+            addBtn.innerHTML = '<i class="fas fa-plus mr-2"></i> Đăng bài';
+            addBtn.onclick = function() { alert('Chức năng đăng bài sẽ được thêm sau'); };
+            header.appendChild(addBtn);
+        }
+
+        // Handle login form
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const message = document.getElementById('loginMessage');
+
+            if (username === 'quynhnhung' && password === '24011997') {
+                message.textContent = 'Đăng nhập thành công!';
+                message.className = 'mb-4 text-center text-emerald-600';
+                message.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    closeLoginModal();
+                    document.querySelector('.bg-emerald-600').textContent = 'Xin chào ' + username;
+                    
+                    isAdminLoggedIn = true;
+                    // Show admin controls
+                    document.querySelectorAll('#adminControls').forEach(control => {
+                        control.classList.remove('hidden');
+                    });
+                    showAdminControls();
+                    showAdminControlsOnCards();
+                    
+                    // Update add property button
+                    const addBtn = document.createElement('button');
+                    addBtn.className = 'bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition duration-300';
+                    addBtn.innerHTML = '<i class="fas fa-plus mr-2"></i> Đăng bài';
+                    addBtn.onclick = showPostModal;
+                    
+                    const header = document.querySelector('#ban-dat .flex.justify-between');
+                    if (!header.querySelector('button')) {
+                        header.appendChild(addBtn);
+                    }
+                }, 1000);
+            } else {
+                message.textContent = 'Tài khoản hoặc mật khẩu sai!';
+                message.className = 'mb-4 text-center text-red-600';
+                message.classList.remove('hidden');
+            }
+        });
+
+        // Track current property ID for edit/delete
+        let currentPropertyId = null;
+        let isAdminLoggedIn = false;
+        let editingPostId = null;
+
+        // Handle property click - show modal or edit/delete buttons
+        function handlePropertyClick(event, title, location, area, price, legal, image, description, features) {
+            // First close any open modal to clean up
+            closeModal();
+            // Then open new modal
+            showPropertyModal(title, location, area, price, legal, image, description, features);
+        }
+
+        // Show edit/delete buttons when admin is logged in
+        function showAdminControlsOnCards() {
+            document.querySelectorAll('.property-card').forEach(card => {
+                const controls = document.createElement('div');
+                controls.className = 'admin-controls absolute top-2 left-2 flex space-x-2 hidden';
+                controls.innerHTML = `
+                    <button class="admin-control-btn bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full" 
+                            onclick="editCurrentProperty(event)">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="admin-control-btn bg-red-500 hover:bg-red-600 text-white p-2 rounded-full" 
+                            onclick="deleteCurrentProperty(event)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                card.querySelector('.relative').appendChild(controls);
+            });
+        }
+
+        // Edit current property
+        let originalImages = []; // Biến lưu trữ ảnh cũ
+
+        function editCurrentProperty() {
+            if (!currentPropertyId) return;
+            editingPostId = currentPropertyId;
+            
+            db.collection("properties").doc(editingPostId).get().then(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    originalImages = data.detailImages || []; // Lưu ảnh cũ khi bắt đầu chỉnh sửa
+                    document.getElementById('propertyTitle').value = data.title;
+                    document.getElementById('propertyDescription').value = data.description;
+                    document.getElementById('propertyPrice').value = data.price;
+                    document.getElementById('propertyDiscount').value = data.discount || 0;
+                    document.getElementById('propertyLocation').value = data.location;
+                    document.getElementById('propertyArea').value = data.area;
+                    document.getElementById('propertyLegal').value = data.legal || 'Sổ đỏ';
+                    
+                    // Hiển thị ảnh bìa nếu có
+                    if (data.coverImage) {
+                        document.getElementById('previewImage').src = data.coverImage;
+                        document.getElementById('imagePreview').classList.remove('hidden');
+                    }
+                    
+                    // Hiển thị ảnh chi tiết nếu có
+                    const detailContainer = document.getElementById('detailImagesPreview');
+                    if (data.detailImages && data.detailImages.length > 0) {
+                        detailContainer.innerHTML = '';
+                        data.detailImages.forEach((imgUrl, index) => {
+                            const div = document.createElement('div');
+                            div.className = 'relative';
+                            const img = document.createElement('img');
+                            img.src = imgUrl;
+                            img.className = 'h-24 w-full object-cover rounded';
+                            img.dataset.index = index;
+                            
+                            const removeBtn = document.createElement('button');
+                            removeBtn.className = 'absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs';
+                            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                            removeBtn.onclick = function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                removeDetailImage(index);
+                            };
+                            
+                            div.appendChild(img);
+                            div.appendChild(removeBtn);
+                            detailContainer.appendChild(div);
+                        });
+                        detailContainer.classList.remove('hidden');
+                    }
+                    
+                    // Set current ID for update
+                    document.getElementById('propertyForm').dataset.editId = currentPropertyId;
+                    
+                    // Show edit modal
+                    document.getElementById('postModal').classList.remove('hidden');
+                    document.querySelector('#postModal h2').textContent = editingPostId ? 'Chỉnh sửa bài đăng' : 'Đăng bài bất động sản';
+                    const submitBtn = document.querySelector('#postModal button[type="submit"]');
+                    submitBtn.textContent = editingPostId ? 'Cập nhật' : 'Đăng bài';
+                    submitBtn.disabled = false;
+                    
+                    // Close property modal
+                    closeModal();
+                }
+            }).catch(error => {
+                console.error("Error getting document:", error);
+                alert("Có lỗi xảy ra khi tải dữ liệu bài đăng");
+            });
+        }
+
+        // Delete current property
+        function deleteCurrentProperty() {
+            if (!currentPropertyId) return;
+            
+            if (confirm('Bạn có chắc muốn xóa bài đăng này?')) {
+                db.collection("properties").doc(currentPropertyId).delete().then(() => {
+                    alert('Đã xóa bài đăng thành công');
+                    closeModal();
+                    loadPropertiesFromFirebase();
+                    
+                    // Also update admin panel if open
+                    if (!document.getElementById('adminPanel').classList.contains('hidden')) {
+                        loadAdminPosts();
+                    }
+                }).catch(error => {
+                    console.error("Error removing document:", error);
+                    alert("Có lỗi xảy ra khi xóa bài đăng");
+                });
+            }
+        }
+
+        // Property Modal Functions
+        function showPropertyModal(title, location, area, price, legal, image, description, features, id = null) {
+            selectedPost = { 
+                title, location, area, price, legal, image, description, features, id 
+            };
+            currentPropertyId = id;
+            
+            // Show edit/delete buttons for admin
+            if (isAdminLoggedIn) {
+                document.getElementById('editPropertyBtn').classList.remove('hidden');
+                document.getElementById('deletePropertyBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('editPropertyBtn').classList.add('hidden');
+                document.getElementById('deletePropertyBtn').classList.add('hidden');
+            }
+            
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalLocation').textContent = location;
+            document.getElementById('modalArea').textContent = area;
+            document.getElementById('modalPrice').innerHTML = price;
+            document.getElementById('modalLegal').textContent = legal;
+            document.getElementById('modalImage').src = image;
+            document.getElementById('modalDescription').textContent = description;
+            
+            // Clear video container
+            const videoContainer = document.getElementById('videoContainer');
+            videoContainer.innerHTML = '';
+            
+            // Set thumbnails and main image
+            const thumbsContainer = document.querySelector('.grid.grid-cols-3.gap-2.mt-4');
+            thumbsContainer.innerHTML = '';
+            
+            // Set main image
+            document.getElementById('modalImage').src = image;
+            
+            // Add cover image as first thumbnail
+            addThumbnail(image, thumbsContainer);
+
+            // Load video if exists
+            if (id) {
+                db.collection("properties").doc(id).get().then(doc => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        if (data.videoUrl) {
+                            const videoId = extractVideoId(data.videoUrl);
+                            if (videoId) {
+                                // Add video thumbnail to gallery
+                                const videoThumb = document.createElement('div');
+                                videoThumb.className = 'h-20 rounded overflow-hidden relative';
+                                videoThumb.innerHTML = `
+                                    <img src="https://img.youtube.com/vi/${videoId}/default.jpg" 
+                                         class="w-full h-full object-cover cursor-pointer">
+                                    <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                                        <i class="fas fa-play text-white text-2xl"></i>
+                                    </div>
+                                `;
+                                videoThumb.onclick = function() {
+                                    const iframe = document.createElement('iframe');
+                                    // Convert Shorts URL to regular embed URL if needed
+                                    const embedUrl = data.videoUrl.includes('shorts/') 
+                                        ? `https://www.youtube.com/embed/${videoId}?autoplay=1`
+                                        : `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+                                    iframe.src = embedUrl;
+                                    iframe.width = '100%';
+                                    iframe.height = '100%';
+                                    iframe.className = 'w-full h-full';
+                                    iframe.setAttribute('frameborder', '0');
+                                    iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+                                    iframe.setAttribute('allowfullscreen', '');
+                                    
+                                    document.getElementById('modalImage').replaceWith(iframe);
+                                };
+                                document.getElementById('galleryThumbs').appendChild(videoThumb);
+                            }
+                        }
+                    }
+                });
+            }
+            
+            
+            // Add all detail images if available
+            if (id) {
+                db.collection("properties").doc(id).get().then(doc => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        if (data.detailImages && data.detailImages.length > 0) {
+                            data.detailImages.forEach(imgUrl => {
+                                addThumbnail(imgUrl, thumbsContainer);
+                            });
+                        }
+                        
+                        // Update description if available
+                        if (data.description) {
+                            document.getElementById('modalDescription').textContent = data.description;
+                        }
+
+                        // Load features from database if available
+                        if (data.features && data.features.length > 0) {
+                            features = data.features;
+                        }
+                    }
+
+                    // Add features (either from parameters or from database)
+                    const featuresContainer = document.getElementById('modalFeatures');
+                    featuresContainer.innerHTML = '';
+                    if (features && features.length > 0) {
+                        features.forEach(feature => {
+                            const li = document.createElement('li');
+                            li.className = 'flex items-center';
+                            li.innerHTML = `<i class="fas fa-check text-emerald-500 mr-2"></i> ${feature}`;
+                            featuresContainer.appendChild(li);
+                        });
+                    } else {
+                        featuresContainer.innerHTML = '<li class="text-gray-500">Không có đặc điểm nào</li>';
+                    }
+                });
+            } else {
+                // Add features from parameters if no ID provided
+                const featuresContainer = document.getElementById('modalFeatures');
+                featuresContainer.innerHTML = '';
+                if (features && features.length > 0) {
+                    features.forEach(feature => {
+                        const li = document.createElement('li');
+                        li.className = 'flex items-center';
+                        li.innerHTML = `<i class="fas fa-check text-emerald-500 mr-2"></i> ${feature}`;
+                        featuresContainer.appendChild(li);
+                    });
+                } else {
+                    featuresContainer.innerHTML = '<li class="text-gray-500">Không có đặc điểm nào</li>';
+                }
+            }
+
+            function addThumbnail(imgUrl, container) {
+                const thumb = document.createElement('div');
+                thumb.className = 'h-20 rounded overflow-hidden';
+                const img = document.createElement('img');
+                img.src = imgUrl;
+                img.className = 'w-full h-full object-cover cursor-pointer';
+                img.onclick = function() { 
+                    // Remove any existing iframe
+                    const mainGallery = document.querySelector('.relative.h-64.lg\\:h-full');
+                    if (mainGallery.querySelector('iframe')) {
+                        mainGallery.innerHTML = `
+                            <img id="modalImage" src="${imgUrl}" alt="" class="w-full h-full object-cover cursor-pointer" onclick="openLightbox(this.src)">
+                        `;
+                    } else {
+                        document.getElementById('modalImage').src = imgUrl;
+                    }
+                };
+                thumb.appendChild(img);
+                container.appendChild(thumb);
+            }
+            
+            document.getElementById('propertyModal').classList.remove('hidden');
+        }
+
+        let selectedPost = null; // Track currently selected post
+        
+        function closeModal() {
+            // Reset selected post
+            selectedPost = null;
+            
+            // Stop any playing videos by removing iframes
+            const modal = document.getElementById('propertyModal');
+            const videoContainer = document.getElementById('videoContainer');
+            videoContainer.innerHTML = '';
+            
+            // Remove any iframes in the main gallery
+            const iframes = modal.querySelectorAll('iframe');
+            iframes.forEach(iframe => iframe.remove());
+            
+            // Restore the main image if it was replaced
+            const mainGallery = modal.querySelector('.relative.h-64.lg\\:h-full');
+            if (mainGallery && !mainGallery.querySelector('#modalImage')) {
+                const img = document.createElement('img');
+                img.id = 'modalImage';
+                img.className = 'w-full h-full object-cover cursor-pointer';
+                img.onclick = function() { openLightbox(this.src); };
+                mainGallery.appendChild(img);
+            }
+            
+            // Clear thumbnails
+            const thumbsContainer = document.getElementById('galleryThumbs');
+            thumbsContainer.innerHTML = '';
+            
+            // Hide modal
+            modal.classList.add('hidden');
+            
+            // Reset current property ID
+            currentPropertyId = null;
+        }
+
+
+        // Popup Form Functions
+        function closePopup() {
+            document.getElementById('consultationPopup').classList.add('hidden');
+        }
+
+        // Admin Panel Functions
+        function toggleAdminPanel() {
+            const panel = document.getElementById('adminPanel');
+            panel.classList.toggle('hidden');
+            if (!panel.classList.contains('hidden')) {
+                loadAdminPosts();
+            }
+        }
+
+        function loadAdminPosts() {
+            db.collection("properties").orderBy("createdAt", "desc").get().then(snapshot => {
+                let html = "";
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    html += `
+                        <div class="border-b border-gray-200 py-2">
+                            <h4 class="font-medium">${data.title}</h4>
+                            <p class="text-sm text-gray-600">${data.location} - ${data.price} t tỷ</p>
+                            <div class="flex justify-end space-x-2 mt-1">
+                                <button onclick="editPost('${doc.id}')" class="text-blue-600 text-xs">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deletePost('${doc.id}')" class="text-red-600 text-xs">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>`;
+                });
+                document.getElementById('adminPosts').innerHTML = html || "<p class='text-gray-500 text-sm'>Không có bài đăng nào</p>";
+            });
+        }
+
+        function deletePost(id) {
+            if (confirm("Bạn có chắc muốn xóa bài đăng này?")) {
+                db.collection("properties").doc(id).delete()
+                    .then(() => {
+                        alert("Đã xóa bài đăng thành công");
+                        loadAdminPosts();
+                    });
+            }
+        }
+
+        function editPost(id) {
+            // Implementation for edit functionality
+            alert("Chức năng chỉnh sửa sẽ được thêm sau");
+        }
+
+        // Show admin panel button for logged in users
+        function showAdminControls() {
+            const adminBtn = document.createElement('button');
+            adminBtn.className = 'fixed bottom-4 left-4 bg-emerald-600 text-white w-14 h-14 rounded-full flex items-center justify-center hover:bg-emerald-700 transition duration-300';
+            adminBtn.innerHTML = '<i class="fas fa-cog text-2xl"></i>';
+            adminBtn.onclick = toggleAdminPanel;
+            document.body.appendChild(adminBtn);
+        }
+
+        // Xử lý gửi form
+        document.getElementById('myForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var form = e.target;
+            var data = new FormData(form);
+
+            // Gửi dữ liệu về Google Apps Script
+            fetch("https://script.google.com/macros/s/AKfycbxahq_b1_Gbg5GZfdeSuFgj9K8ohLcPdIcCIMO9DJhYig59IzWtO0IiPBa002ChJJr_/exec", {
+                method: "POST",
+                body: data
+            }).catch(err => {
+                console.error("Lỗi khi gửi:", err);
+            });
+
+            // Ngay lập tức hiện thông báo và ẩn form
+            var msg = document.getElementById("successMsg");
+            msg.style.display = "block";
+            form.style.display = "none";
+
+            // Sau 3 giây ẩn popup
+            setTimeout(() => {
+                msg.style.display = "none";
+                closePopup();
+            }, 3000);
+        });
+
+        // Hiện popup sau 5 giây
+        setTimeout(() => {
+            document.getElementById('consultationPopup').classList.remove('hidden');
+        }, 5000);
+
+        // Hàm trích xuất ID từ URL YouTube (xử lý cả 3 dạng link)
+        function extractVideoId(url) {
+            // Dạng rút gọn: https://youtu.be/videoId
+            if (url.includes('youtu.be/')) {
+                return url.split('youtu.be/')[1].split('?')[0];
+            }
+            // Dạng Shorts: https://youtube.com/shorts/ID
+            else if (url.includes('youtube.com/shorts/')) {
+                return url.split('youtube.com/shorts/')[1].split('?')[0];
+            }
+            // Dạng đầy đủ: https://www.youtube.com/watch?v=videoId
+            else if (url.includes('v=')) {
+                return url.split('v=')[1].split('&')[0];
+            }
+            return null;
+        }
+
+        // Simple property filter functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('QuynhNhungLand website loaded');
+            
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobileMenuButton');
+            const mobileMenu = document.getElementById('mobileMenu');
+            
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        });
+
+        function showAllProperties() {
+            // Similar to previous implementation but with filter support
+            document.querySelectorAll('section').forEach(section => {
+                if(section.id !== 'ban-dat') section.style.display = 'none';
+            });
+
+            const propertySection = document.getElementById('ban-dat');
+            propertySection.querySelector('h2').textContent = 'Tất cả bất động sản';
+            
+            const propertyGrid = propertySection.querySelector('.grid');
+            propertyGrid.classList.remove('lg:grid-cols-3');
+            propertyGrid.classList.add('lg:grid-cols-4');
+            
+            const backButton = document.createElement('button');
+            backButton.className = 'bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition duration-300 ml-4';
+            backButton.innerHTML = '<i class="fas fa-arrow-left mr-2"></i> Quay lại';
+            backButton.onclick = function() { location.reload(); };
+            
+            const headerDiv = propertySection.querySelector('.flex.justify-between');
+            headerDiv.querySelector('a').remove();
+            headerDiv.appendChild(backButton);
+            
+            propertySection.scrollIntoView({behavior: 'smooth'});
+        }
+
+        // Search and filter functionality
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const keyword = document.getElementById('searchKeyword').value.toLowerCase();
+            const area = document.getElementById('searchArea').value;
+            const type = document.getElementById('searchType').value;
+            const priceRange = document.getElementById('searchPrice').value;
+            
+            document.querySelectorAll('.property-card').forEach(card => {
+                const cardArea = card.dataset.area;
+                const cardType = card.dataset.type;
+                const cardPrice = parseFloat(card.dataset.price);
+                const cardTitle = card.querySelector('h3').textContent.toLowerCase();
+                const cardLocation = card.querySelector('p').textContent.toLowerCase();
+                                
+                // Check if matches filters
+                const matchesArea = !area || cardArea === area;
+                const matchesType = !type || cardType === type;
+                const matchesPrice = !priceRange || (
+                    (priceRange === '0-1' && cardPrice < 1) ||
+                    (priceRange === '1-3' && cardPrice >= 1 && cardPrice <= 3) ||
+                    (priceRange === '3-5' && cardPrice > 3 && cardPrice <= 5) ||
+                    (priceRange === '5-10' && cardPrice > 5 && cardPrice <= 10) ||
+                    (priceRange === '10+' && cardPrice > 10)
+                );
+                const matchesKeyword = !keyword || 
+                     cardTitle.includes(keyword) || 
+                     cardLocation.includes(keyword);
+                                
+                // Show/hide based on matches
+                if (matchesArea && matchesType && matchesPrice && matchesKeyword) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Show all properties section
+            showAllProperties();
+        });
+        
+    </script>
+
+    <script>
+        function loadPropertiesFromFirebase() {
+            const propertyGrid = document.querySelector('#ban-dat .grid');
+            if (!propertyGrid) return;
+            
+            propertyGrid.innerHTML = ''; // Xóa cũ nếu có
+
+            db.collection("properties").orderBy("createdAt", "desc").get().then((querySnapshot) => {
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    
+                    // Bỏ qua nếu không có dữ liệu cần thiết
+                    if (!data.title || !data.location || !data.area || !data.price) return;
+
+                    const newProperty = document.createElement('div');
+                    newProperty.className = 'property-card bg-white rounded-xl overflow-hidden shadow-md transition duration-300 cursor-pointer hover:shadow-lg';
+
+                    const imageUrl = data.coverImage || `https://picsum.photos/500/300?random=${Math.floor(Math.random() * 1000)}`;
+                    const discount = data.discount || 0;
+                    const salePrice = discount > 0 ? data.price * (100 - discount) / 100 : null;
+
+                    newProperty.innerHTML = `
+                        <div class="relative">
+                            <img src="${imageUrl}" alt="${data.title}" class="w-full h-60 object-cover">
+                            ${discount > 0 ? `<div class="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium">Giảm ${discount}%</div>` : ''}
+                            ${data.videoUrl ? `<div class="absolute top-4 left-4 ${discount > 0 ? 'mt-8' : ''} bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium"><i class="fas fa-video mr-1"></i> Video</div>` : ''}
+                            <div class="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md">
+                                <i class="far fa-heart text-gray-600 hover:text-red-500 cursor-pointer"></i>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-xl font-bold text-gray-800">${data.title}</h3>
+                                <span class="bg-emerald-100 text-emerald-800 text-xs font-medium px-2 py-1 rounded">Đã xác thực</span>
+                            </div>
+                            <p class="text-gray-600 mb-4"><i class="fas fa-map-marker-alt text-emerald-600 mr-2"></i> ${data.location}</p>
+                            <div class="flex justify-between mb-4">
+                                <div>
+                                    <p class="text-gray-500 text-sm">Diện tích</p>
+                                    <p class="font-medium">${data.area}m²</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-sm">Giá</p>
+                                    <div class="font-medium text-emerald-600">
+                                        ${salePrice ? `${salePrice.toFixed(1)} (<span class="text-gray-500 line-through">${data.price.toFixed(1)}</span>) tỷ` : `${data.price.toFixed(1)} tỷ`}
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-sm">Pháp lý</p>
+                                    <p class="font-medium">${data.legal || "Sổ đỏ"}</p>
+                                </div>
+                            </div>
+                            <a href="https://zalo.me/0382718916" target="_blank" class="block w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-lg transition duration-300 text-center mb-2">
+                                <i class="fas fa-phone-alt mr-2"></i> Liên hệ ngay
+                            </a>
+                        </div>
+                    `;
+
+                    newProperty.addEventListener('click', () => {
+                        showPropertyModal(
+                            data.title,
+                            data.location,
+                            `${data.area}m²`,
+                            salePrice ? `${salePrice.toFixed(1)} t tỷ <span class="text-gray-500 line-through">${data.price.toFixed(1)} tỷ</span>` : `${data.price.toFixed(1)} tỷ`,
+                            "Sổ đỏ",
+                            imageUrl,
+                            data.description || 'Không có mô tả chi tiết',
+                            data.features || [], // Truyền features từ dữ liệu
+                            doc.id
+                        );
+                    });
+
+                    propertyGrid.appendChild(newProperty);
+                });
+            }).catch(error => {
+                console.error("Lỗi khi tải dữ liệu:", error);
+            });
+        }
+
+        // Chỉ load khi DOM đã sẵn sàng và Firebase đã khởi tạo
+        document.addEventListener('DOMContentLoaded', function() {
+            // Kiểm tra nếu Firebase đã khởi tạo
+            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                loadPropertiesFromFirebase();
+            } else {
+                // Nếu chưa, thử lại sau 1 giây
+                setTimeout(loadPropertiesFromFirebase, 1000);
+            }
+        });
+    </script>
+
+</body>
+</html>
